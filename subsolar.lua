@@ -15,7 +15,7 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --
---    Version: 1.1.0
+--    Version: 1.1.1
 --    Depends: qdbus librsvg2-bin xmlstarlet fonts-cantarell gmt gmt-gshhg
 --    geoclue-2.0 geographiclib-tools python3-ephem gnome-icon-theme-symbolic
 --    conky-all gcalcli
@@ -807,9 +807,9 @@ function Calendar:update_marks()
     if file then
         self.marks = {}
         for line in file:lines() do
-            if line ~= "EOF" and tonumber(line) == "number" then
+            if type(tonumber(line)) == "number" then
                 self.marks[tonumber(line)] = true
-            else
+            elseif line == "EOF" then
                 os.remove(self.tmpfile)
                 self.marks_expired = false
             end -- if    
