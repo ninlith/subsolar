@@ -1,0 +1,31 @@
+conky.config = {
+    gap_x = 5,
+    gap_y = 0,
+    alignment = 'top_left',
+    border_inner_margin = 0,
+    border_outer_margin = 0,
+    draw_shades = false,
+    double_buffer = true,
+    own_window = true,
+    own_window_type = 'desktop',
+    own_window_transparent = true,
+    own_window_hints = 'undecorated,below,sticky,skip_taskbar,skip_pager',
+    own_window_argb_visual = true,
+    own_window_argb_value = 255,
+    update_interval = 1.0,
+    use_xft = true,
+    font = 'Mono:size=10',
+    text_buffer_size = 8096,
+    lua_load = '~/.conky/subsolar/subsolar.lua',
+    lua_shutdown_hook = 'conky_shutdown',
+    }
+
+conky.config.lua_draw_hook_pre = 'conky_main ' .. conky.config.gap_x
+resolution = io.popen("xrandr | fgrep '*'"):read("*l")
+conky.config.minimum_width = tonumber(resolution:gmatch("(%d+)x")())
+conky.config.minimum_height = tonumber(resolution:gmatch("x(%d+)")())
+
+conky.text = [[
+${lua_parse color accent}
+${execpi 300 gcalcli --military --nocolor agenda}
+]]
