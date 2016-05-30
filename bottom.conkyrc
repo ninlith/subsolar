@@ -16,7 +16,7 @@ conky.config = {
     use_xft = true,
     font = 'Mono:size=10',
     text_buffer_size = 8096,
-    lua_load = 'subsolar.lua',
+    lua_load = '~/.conky/subsolar/subsolar.lua',
     template0 = [[${lua_parse color accent}${execi 3600]],
     template1 = [[${lua_parse color foreground} • ${template0}]],
     }
