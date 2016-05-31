@@ -15,7 +15,7 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --
---    Version: 1.1.1+post
+--    Version: 1.1.2
 --    Depends: conky-all, qdbus, librsvg2-bin, xmlstarlet, gmt, gmt-gshhg,
 --    python3-ephem | python-ephem, geoclue-2.0, geographiclib-tools, 
 --    fonts-cantarell, gnome-icon-theme-symbolic, gcalcli
@@ -55,7 +55,7 @@ local clock_line_width
 local clock_radius
 local clock_secondary_radius
 local clock_marker_length
-local weather_api_key = "" -- http://openweathermap.org/appid
+local weather_api_key
 local weather_days = 7
 local weather_scale = 1
 local weather_margin_x, weather_margin_y = 25, 50 -- px
@@ -69,6 +69,7 @@ local geolocation_timeout = 10
 local M_PI = math.pi
 local MOON_RADIUS = 0.273 -- Earths
 local EARTH_OBLIQUITY = 23.4
+local SUBSOLAR_OWM_API_KEY = "a65f66be4ed52d8fc08e5a41f81b621a"
 
 local sun_rise_angle, sun_set_angle = nil, nil
 local center_x, center_y, gap_x = nil, nil, nil
@@ -292,8 +293,8 @@ setmetatable(OpenWeatherMap, {
     end, -- __call
     })
 
-function OpenWeatherMap:_init()
-    self.api_key = weather_api_key
+function OpenWeatherMap:_init(api_key)
+    self.api_key = api_key
     self.forecast = {}
     self.scale = 7*scale*weather_scale
 end -- _init
@@ -1580,7 +1581,7 @@ function conky_main(conkyrc_gap_x)
 
         locationmap = OrthographicMap()
         subsolarmap = OrthographicMap()
-        weather = OpenWeatherMap()
+        weather = OpenWeatherMap(weather_api_key or SUBSOLAR_OWM_API_KEY)
         calendar = Calendar()
         geolocation = Geolocation()
 
