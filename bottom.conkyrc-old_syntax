@@ -1,0 +1,24 @@
+gap_x 5
+gap_y 0
+alignment bottom_left
+border_inner_margin 0
+border_outer_margin 0
+draw_shades no # #401 using "draw_shades yes" lua script runs twice per update
+double_buffer yes
+own_window yes
+own_window_type desktop
+own_window_transparent yes
+own_window_hints undecorated,below,sticky,skip_taskbar,skip_pager
+own_window_argb_visual yes
+own_window_argb_value 255
+update_interval 1.0
+use_xft yes
+xftfont Mono:size=10
+text_buffer_size 8096
+lua_load ~/.conky/subsolar/subsolar.lua
+template0 ${lua_parse color accent}${execi 3600
+template1 ${lua_parse color foreground} • ${template0}
+
+TEXT
+${template0} grep 'PRETTY_NAME' /etc/os-release | cut -d"\"" -f2}${template1} uname -sr}${template1} echo $(inxi -c0 -S || echo $XDG_CURRENT_DESKTOP) | sed -e 's/.*Desktop: //' -e 's/ [A-Z][a-z]*:.*//' }${template1} xrandr | fgrep '*' | awk '{print $1}'}
+${voffset 35}
