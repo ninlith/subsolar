@@ -16,9 +16,9 @@
 --    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --
 --    Version: 1.1.1+post
---    Depends: qdbus librsvg2-bin xmlstarlet fonts-cantarell gmt gmt-gshhg
---    geoclue-2.0 geographiclib-tools python3-ephem gnome-icon-theme-symbolic
---    conky-all gcalcli
+--    Depends: conky-all, qdbus, librsvg2-bin, xmlstarlet, gmt, gmt-gshhg,
+--    python3-ephem | python-ephem, geoclue-2.0, geographiclib-tools, 
+--    fonts-cantarell, gnome-icon-theme-symbolic, gcalcli
 --
 --    Magnetic field dataset:
 --    # geographiclib-get-magnetic wmm2015
