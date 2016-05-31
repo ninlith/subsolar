@@ -68,6 +68,7 @@ local geolocation_timeout = 10
 
 local M_PI = math.pi
 local MOON_RADIUS = 0.273 -- Earths
+local EARTH_OBLIQUITY = 23.4
 
 local sun_rise_angle, sun_set_angle = nil, nil
 local center_x, center_y, gap_x = nil, nil, nil
@@ -82,7 +83,7 @@ local ephem, locationmap, subsolarmap, weather, calendar, geolocation
 --                                                                        Ephem
 local function Ephem()
     local self = {}
-
+    
     local function _unserialize(str)
         local e1, e2 = unpack(explode("; ", str, 2))
         
@@ -107,7 +108,9 @@ local function Ephem()
     end -- _unserialize
    
     function self.compute(lat, lon, tles)
-        local command = [[python3 -c "]] .. dedent([[
+        local command = 
+            [[python$(python3 -c 'import ephem' 2> /dev/null && echo 3) -c "]] 
+            .. dedent([[
             import ephem
             import ephem.stars
             import math
@@ -228,7 +231,6 @@ local function text(str, args)
            cr, default_font.family, default_font.slant, default_font.weight)
         cairo_set_font_size(cr, font_size)
         cairo_set_source_rgba(cr, unpack(color))
-        cairo_font_extents(cr, extents)
     end -- _setup
 
     function self.center(cr, x, y)
@@ -245,8 +247,8 @@ local function text(str, args)
 
     function self.to_arc(cr, r, sign, rotation, x, y)
         _setup(cr)
-        cairo_font_extents(cr, extents)
-        local font_extents_height = extents.height
+        cairo_font_extents(cr, font_extents)
+        local font_extents_height = font_extents.height
         local vcenter = 1
         x, y = x or center_x, y or center_y
         local rotation = rotation or 0
@@ -982,7 +984,7 @@ end -- get_iss_tle()
 -------------------------------------------------------------------------------
 --                                                                        stars
 function stars()
-    for k, v in pairs(ephem.stars) do
+    for k, v in pairs(ephem.stars or {}) do
         if tonumber(v.alt) > 0  then        
             cairo_save(cr)
             cairo_translate(cr, center_x, center_y)
@@ -1021,7 +1023,7 @@ end -- stars
 -------------------------------------------------------------------------------
 --                                                                      planets
 function planets()
-    for k, v in pairs(ephem.planets) do
+    for k, v in pairs(ephem.planets or {}) do
         if tonumber(v.alt) > 0 then        
             cairo_save(cr)
             cairo_translate(cr, center_x, center_y)
@@ -1058,30 +1060,35 @@ end -- planets
 -------------------------------------------------------------------------------
 --                                                    calculate_twilight_angles
 function calculate_twilight_angles()
-    if ephem.sunrise == "never" then
-        sun_rise_angle = 0
-        sun_set_angle = 0
-    elseif ephem.sunrise == "always" then
-        sun_rise_angle = 0
-        sun_set_angle = 360
+    if pcall(function()
+            if ephem.sunrise == "never" then
+                sun_rise_angle = 0
+                sun_set_angle = 0
+            elseif ephem.sunrise == "always" then
+                sun_rise_angle = 0
+                sun_set_angle = 360
+            else
+                local command = "echo '" .. ephem.sunrise .. "\\n" .. 
+                    ephem.sunset .. "' | date -u +'%FT%T%z' -f -" .. 
+                    " | date +'%T' -f -"
+                local file = io.popen(command)
+                local sun_rise_time = file:read("*l")
+                local sun_set_time = file:read("*l")
+                file:close()
+                if sun_rise_time and sun_set_time then
+                    sun_rise_angle = (
+                        sun_rise_time:sub(1, 2)*60*60 
+                        + sun_rise_time:sub(4, 5)*60
+                        + sun_rise_time:sub(7, 8))*(360/86400)
+                    sun_set_angle = (
+                        sun_set_time:sub(1, 2)*60*60 
+                        + sun_set_time:sub(4, 5)*60
+                        + sun_set_time:sub(7, 8))*(360/86400)
+                end -- if
+            end -- if
+            end) then
     else
-        local command = "echo '" .. ephem.sunrise .. "\\n" .. 
-            ephem.sunset .. "' | date -u +'%FT%T%z' -f - | date +'%T' -f -"
-        local file = io.popen(command)
-        local sun_rise_time = file:read("*l")
-        local sun_set_time = file:read("*l")
-        file:close()
-        if sun_rise_time and sun_set_time then
-            sun_rise_angle = (
-                sun_rise_time:sub(1, 2)*60*60 
-                + sun_rise_time:sub(4, 5)*60
-                + sun_rise_time:sub(7, 8))*(360/86400)
-            sun_set_angle = (
-                sun_set_time:sub(1, 2)*60*60 
-                + sun_set_time:sub(4, 5)*60
-                + sun_set_time:sub(7, 8))*(360/86400)
-        end -- if
-    end -- if
+    end -- if pcall            
 end -- calculate_twilight_angles
 
 -------------------------------------------------------------------------------
@@ -1551,12 +1558,14 @@ function conky_main(conkyrc_gap_x)
     cr = cairo_create(cs)
     extents = cairo_text_extents_t:create()
     tolua.takeownership(extents)
+    font_extents = cairo_font_extents_t:create()
+    tolua.takeownership(font_extents)
 
-    gap_x = conkyrc_gap_x
+    gap_x = conkyrc_gap_x or 5
     center_x, center_y = conky_window.width/2 - gap_x, conky_window.height/2
     updates = tonumber(conky_parse('${updates}'))
 
-    if is_first_run then
+    if is_first_run and updates > 1 then
         -- scale
         scale = math.min(
             (10/1050)*conky_window.height, (10/1680)*conky_window.width)
@@ -1580,13 +1589,18 @@ function conky_main(conkyrc_gap_x)
         calculate_twilight_angles()
         locationmap:create_projection(geolocation.lat, geolocation.lon,
             clock_radius - clock_line_width/2, colors.map)
-        subsolarmap:create_projection(ephem.subsolar.lat, ephem.subsolar.lon,
-            clock_secondary_radius, colors.map)
+        if pcall(function()
+                subsolarmap:create_projection(
+                    ephem.subsolar.lat, ephem.subsolar.lon,
+                    clock_secondary_radius, colors.map)
+                end) then
+        else
+        end -- if pcall
         
         convert_icons()
         os.setlocale('C') -- needed for weather forecast floats
         is_first_run = not is_first_run
-    else
+    elseif updates > 1 then
         ephem = Ephem()
         ephem.compute(geolocation.lat, geolocation.lon, tles)
 
@@ -1601,9 +1615,10 @@ function conky_main(conkyrc_gap_x)
         locationmap:graticule(cr, colors.graticule)
 
         -- major circles of latitude
+        local axial_tilt = ephem.earth_obliquity or EARTH_OBLIQUITY
         local r_equator = 1
-        local r_polar = r_equator*math.sin(math.rad(ephem.earth_obliquity))
-        local r_tropical = r_equator*math.cos(math.rad(ephem.earth_obliquity))
+        local r_polar = r_equator*math.sin(math.rad(axial_tilt))
+        local r_tropical = r_equator*math.cos(math.rad(axial_tilt))
         subsolarmap:project_circle(cr, r_polar, 90, 0, colors.graticule)
         subsolarmap:project_circle(cr, r_tropical, 90, 0, colors.graticule)
         subsolarmap:project_circle(cr, r_equator, 90, 0, colors.graticule)
@@ -1626,14 +1641,14 @@ function conky_main(conkyrc_gap_x)
 --                ephem.subsolar.lat, ephem.subsolar.lon, subsolar_color) 
 --        end -- for
 
-        -- sublunar
-        locationmap:project_circle(cr, MOON_RADIUS,
-            ephem.sublunar.lat, ephem.sublunar.lon, colors.gray2)
-        locationmap:project_circle(cr, MOON_RADIUS*0.5,
-            ephem.sublunar.lat, ephem.sublunar.lon, colors.gray1)
-
-        -- iss
         if pcall(function()
+                -- sublunar
+                locationmap:project_circle(cr, MOON_RADIUS,
+                    ephem.sublunar.lat, ephem.sublunar.lon, colors.gray2)
+                locationmap:project_circle(cr, MOON_RADIUS*0.5,
+                    ephem.sublunar.lat, ephem.sublunar.lon, colors.gray1)
+
+                -- iss
                 local x, y, cos_c = 
                     locationmap:compute_formulas(
                         math.rad(ephem.tles.iss.lat), 
@@ -1643,7 +1658,7 @@ function conky_main(conkyrc_gap_x)
                 end -- if
                 end) then
         else
-        end -- if
+        end -- if pcall
 
         draw_clock()
         local magnetic = MagneticField(geolocation.lat, geolocation.lon)
@@ -1658,7 +1673,7 @@ function conky_main(conkyrc_gap_x)
     end -- if
 
     -- hourly
-    if updates%3600 == 1 then   
+    if updates%3600 == 2 then   
         calculate_twilight_angles()
         geolocation.locate(geolocation_timeout)
         weather:request_forecast(geolocation.lat, geolocation.lon)
@@ -1667,14 +1682,19 @@ function conky_main(conkyrc_gap_x)
     end -- if
 
     -- minutely
-    if updates%60 == 1 then	
+    if updates%60 == 2 then
         geolocation.sync()
         if geolocation.is_changed() then
             locationmap:create_projection(geolocation.lat, geolocation.lon,
                 clock_radius - clock_line_width/2, colors.map)
         end -- if
-        subsolarmap:create_projection(ephem.subsolar.lat, ephem.subsolar.lon,
-            clock_secondary_radius, colors.map)
+        if pcall(function()
+                subsolarmap:create_projection(
+                    ephem.subsolar.lat, ephem.subsolar.lon,
+                    clock_secondary_radius, colors.map)
+                end) then
+        else
+        end -- if pcall
     end -- if
 
     cairo_destroy(cr)
