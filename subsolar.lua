@@ -15,7 +15,7 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --
---    Version: 1.1.1
+--    Version: 1.1.1+post
 --    Depends: qdbus librsvg2-bin xmlstarlet fonts-cantarell gmt gmt-gshhg
 --    geoclue-2.0 geographiclib-tools python3-ephem gnome-icon-theme-symbolic
 --    conky-all gcalcli
@@ -578,13 +578,13 @@ function OrthographicMap:draw(cr, x, y, rotation)
     self.rotation = rotation
     if self.cache then
         cairo_save(cr)
-        cairo_translate (cr, x - self.size/2, y - self.size/2)
-        cairo_set_source_surface(cr, self.cache, 0, 0)
+        cairo_translate(cr, x - self.size/2, y - self.size/2)
         if rotation then
-            cairo_translate (cr, self.size/2, self.size/2)
-            cairo_rotate(cr, rotation)
-            cairo_translate (cr, -self.size/2, -self.size/2)
+            cairo_translate(cr, self.size/2, self.size/2)
+            cairo_rotate(cr, math.rad(rotation))
+            cairo_translate(cr, -self.size/2, -self.size/2)
         end
+        cairo_set_source_surface(cr, self.cache, 0, 0)
         cairo_paint_with_alpha(cr, self.color[4])
         cairo_restore(cr)
     end -- if
