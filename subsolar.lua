@@ -15,7 +15,7 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --
---    Version: 1.1.2
+--    Version: 1.1.2+post
 --    Depends: conky-all, qdbus, librsvg2-bin, xmlstarlet, gmt, gmt-gshhg,
 --    python3-ephem | python-ephem, geoclue-2.0, geographiclib-tools, 
 --    fonts-cantarell, gnome-icon-theme-symbolic, gcalcli
@@ -1645,9 +1645,9 @@ function conky_main(conkyrc_gap_x)
         if pcall(function()
                 -- sublunar
                 locationmap:project_circle(cr, MOON_RADIUS,
-                    ephem.sublunar.lat, ephem.sublunar.lon, colors.gray2)
+                    ephem.sublunar.lat, ephem.sublunar.lon, colors.graticule)
                 locationmap:project_circle(cr, MOON_RADIUS*0.5,
-                    ephem.sublunar.lat, ephem.sublunar.lon, colors.gray1)
+                    ephem.sublunar.lat, ephem.sublunar.lon, colors.graticule)
 
                 -- iss
                 local x, y, cos_c = 
