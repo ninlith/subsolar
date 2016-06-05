@@ -21,4 +21,3 @@ template1 ${lua_parse color foreground} • ${template0}
 
 TEXT
 ${template0} grep 'PRETTY_NAME' /etc/os-release | cut -d"\"" -f2}${template1} uname -sr}${template1} echo $(inxi -c0 -S || echo $XDG_CURRENT_DESKTOP) | sed -e 's/.*Desktop: //' -e 's/ [A-Z][a-z]*:.*//' }${template1} xrandr | fgrep '*' | awk '{print $1}'}
-${voffset 35}
