@@ -15,7 +15,7 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --
---    Version: 1.1.2+post
+--    Version: 1.1.3
 --    Depends: conky-all, qdbus, librsvg2-bin, xmlstarlet, gmt, gmt-gshhg,
 --    python3-ephem | python-ephem, geoclue-2.0, geographiclib-tools, 
 --    fonts-cantarell, gnome-icon-theme-symbolic, gcalcli
@@ -536,8 +536,8 @@ function OrthographicMap:create_projection(lat, lon, r, color)
     self.gmt_lon = lon
     self.gmt_r = r
     self.color = color
-    local command = "(gmt gmtset MAP_ORIGIN_X=0i MAP_ORIGIN_Y=0i " ..
-        "PS_MEDIA=1ix1i && gmt pscoast -Rg -JG" .. lon .. "/" .. lat .. 
+    local command = "(gmt pscoast --MAP_ORIGIN_X=0i --MAP_ORIGIN_Y=0i " ..
+        "--PS_MEDIA=1ix1i -Rg -JG" .. lon .. "/" .. lat .. 
         "/1i -Dc -A1000 -G" .. color[1]*255 .. "/" .. color[2]*255 .. "/" .. 
         color[3]*255 .. " -P > " .. self.postscript_file .. 
         " && gmt psconvert " .. self.postscript_file .. " -E" .. r*2 .. 
