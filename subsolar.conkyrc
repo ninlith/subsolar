@@ -27,5 +27,5 @@ conky.config.minimum_height = tonumber(resolution:gmatch("x(%d+)")())
 
 conky.text = [[
 ${lua_parse color accent}
-${execpi 300 gcalcli --military --nocolor agenda}
+${execpi 300 test -e ~/.gcalcli_oauth && gcalcli --military --nocolor agenda}
 ]]

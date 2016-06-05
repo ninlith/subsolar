@@ -22,4 +22,4 @@ lua_shutdown_hook conky_shutdown
 
 TEXT
 ${lua_parse color accent}
-${execpi 300 gcalcli --military --nocolor --conky agenda}
+${execpi 300 test -e ~/.gcalcli_oauth && gcalcli --military --nocolor --conky agenda}

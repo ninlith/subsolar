@@ -794,7 +794,7 @@ end -- _init
 function Calendar:request_marks(...)
     self.marks_expired = true
     self.marks_month = os.date("%m")
-    local command = [[(echo "$(gcalcli]]
+    local command = [[(test -e ~/.gcalcli_oauth && echo "$(gcalcli]]
     for _, v in ipairs(arg) do
         command = command .. [[ --calendar "]] .. v .. [["]]
     end
