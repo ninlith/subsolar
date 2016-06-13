@@ -15,7 +15,7 @@
 --    You should have received a copy of the GNU General Public License
 --    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --
---    Version: 1.1.3
+--    Version: 1.1.3+post
 --    Depends: conky-all, qdbus, librsvg2-bin, xmlstarlet, gmt, gmt-gshhg,
 --    python3-ephem | python-ephem, geoclue-2.0, geographiclib-tools, 
 --    fonts-cantarell, gnome-icon-theme-symbolic, gcalcli
@@ -1661,12 +1661,12 @@ function conky_main(conkyrc_gap_x)
         else
         end -- if pcall
 
+        stars()
+        planets()
         draw_clock()
         local magnetic = MagneticField(geolocation.lat, geolocation.lon)
         magnetic:draw_magnetic_declination()
         geolocation.draw()
-        stars()
-        planets()
         calendar:sync():draw()
         weather:sync():draw()
         media_bar()
