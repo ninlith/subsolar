@@ -13,7 +13,7 @@
 - Magnetic declination.
 
 ## Installation
-###Debian Stretch:
+### Debian Stretch:
 ```
 git clone https://github.com/ninlith/subsolar.git ~/.conky/subsolar
 sudo apt-get install \
@@ -23,7 +23,7 @@ conky-all gcalcli inxi
 sudo /usr/sbin/geographiclib-get-magnetic wmm2015
 gcalcli agenda
 ```
-###Debian Jessie:
+### Debian Jessie:
 ```
 git clone https://github.com/ninlith/subsolar.git ~/.conky/subsolar
 sudo apt-get -t jessie-backports install gmt gmt-gshhg
